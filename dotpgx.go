@@ -1,4 +1,4 @@
-// Package database creates a connection pool, loads and executes queries.
+// Package dotpgx creates a connection pool, parses and executes queries.
 package dotpgx
 
 import (
@@ -10,7 +10,7 @@ import (
 	log "gopkg.in/inconshreveable/log15.v2"
 )
 
-// Database represents the database connection pool and loaded queries.
+// DB represents the database connection pool and parsed queries.
 type DB struct {
 	// Pool allows direct access to the underlying *pgx.ConnPool
 	Pool *pgx.ConnPool
@@ -18,24 +18,27 @@ type DB struct {
 	qn   int // Incremented value for unamed queries
 }
 
-// New configures and creates a database connection pool
-// It returns a pointer to the Database object.
-// It returns an error only when the connection pool cannot be set-up.
-//
-// An example config object would look like:
-// conf := pgx.ConnPoolConfig{
-//	ConnConfig: pgx.ConnConfig{
-//		Host:     pgHost,
-//		User:     pgUser,
-//		Database: pgDatabase,
-//		Logger:   logger,
-//	},
-//	MaxConnections: 50,
-//	AfterConnect:   sqlPrepare,
-//}
-//
-// Most arguments are optional. If no logger is specified,
-// one will get apointed automatically.
+/*
+New configures and creates a database connection pool
+It returns a pointer to the Database object.
+It returns an error only when the connection pool cannot be set-up.
+
+An example config object would look like:
+
+	conf := pgx.ConnPoolConfig{
+		ConnConfig: pgx.ConnConfig{
+			Host:     pgHost,
+			User:     pgUser,
+			Database: pgDatabase,
+			Logger:   logger,
+		},
+		MaxConnections: 50,
+		AfterConnect:   sqlPrepare,
+	}
+
+Most arguments are optional. If no logger is specified,
+one will get apointed automatically.
+*/
 func New(conf pgx.ConnPoolConfig) (*DB, error) {
 	if conf.Logger == nil {
 		conf.Logger = log15adapter.NewLogger(log.New("module", "pgx"))
