@@ -47,8 +47,8 @@ func (db *DB) ParseSql(r io.Reader) error {
 		// Sanetize leading and trailing whitespace
 		line = strings.TrimSpace(line)
 		// Line with name tag?
-		if strings.HasPrefix(line, "-- name:") {
-			tag = strings.TrimSpace(strings.TrimPrefix(line, "-- name:"))
+		if strings.HasPrefix(line, "-- name:") || strings.HasPrefix(line, "--name:") {
+			tag = strings.TrimSpace(strings.Split(line, ":")[1])
 			// Initialise to empty query body, overwites any previous query with the same name
 			qm[tag] = ""
 			continue

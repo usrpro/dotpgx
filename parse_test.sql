@@ -7,7 +7,7 @@ Empty lines should be stripped off.
 Comment lines starting with --name: will act as query tagname.
 */
 
--- name: one
+--name: one
 select 1 from
     users -- Exlude this comment also!
     where $1 = me;
