@@ -13,7 +13,7 @@ var conf = pgx.ConnPoolConfig{
 	ConnConfig: pgx.ConnConfig{
 		Host:     "/run/postgresql",
 		User:     "postgres",
-		Database: "test",
+		Database: "dotpgx_test",
 	},
 	MaxConnections: 5,
 }
