@@ -1,13 +1,11 @@
-// +build all parse
-
 package dotpgx
 
 import (
 	"testing"
 )
 
-func mapCompare(exp queryMap, got queryMap, t *testing.T) {
-	msg := []interface{}{ //ouch
+func compareQm(exp queryMap, got queryMap) []interface{} {
+	msg := []interface{}{
 		"Maps not same;\nExpected:\n",
 		exp,
 		"\nGot:\n",
@@ -17,13 +15,13 @@ func mapCompare(exp queryMap, got queryMap, t *testing.T) {
 	if len(exp) == len(got) {
 		for k, v := range exp {
 			if got[k] != v {
-				t.Error(msg...)
-				return
+				return msg
 			}
 		}
 	} else {
-		t.Error(msg...)
+		return msg
 	}
+	return nil
 }
 
 var merge_expect queryMap = queryMap{
@@ -42,7 +40,9 @@ func TestMerge(t *testing.T) {
 		"three": "select 3",
 	}
 	qm = merge(qm, qm2)
-	mapCompare(merge_expect, qm, t)
+	if msg := compareQm(merge_expect, qm); msg != nil {
+		t.Error(msg...)
+	}
 }
 
 var parse_expect queryMap = queryMap{
@@ -61,7 +61,9 @@ func TestParseFile(t *testing.T) {
 		t.Error("ParseFile err;", err)
 		return
 	}
-	mapCompare(parse_expect, db.qm, t)
+	if msg := compareQm(parse_expect, db.qm); msg != nil {
+		t.Error(msg...)
+	}
 }
 
 // This tests ParsePath and ParseFileBlob at once

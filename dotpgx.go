@@ -2,9 +2,6 @@
 package dotpgx
 
 import (
-	"errors"
-	"strings"
-
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/log/log15adapter"
 	log "gopkg.in/inconshreveable/log15.v2"
@@ -51,18 +48,9 @@ func New(conf pgx.ConnPoolConfig) (*DB, error) {
 	return &DB{Pool: pool}, nil
 }
 
-func (db *DB) getQuery(name string) (sql string, err error) {
-	sql = db.qm[name]
-	if sql == "" {
-		s := []string{"Unknown query", name}
-		err = errors.New(strings.Join(s, ": "))
-	}
-	return
-}
-
 // Prepare a sql statement identified by name.
 func (db *DB) Prepare(name string) (*pgx.PreparedStatement, error) {
-	sql, err := db.getQuery(name)
+	sql, err := db.qm.getQuery(name)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +59,7 @@ func (db *DB) Prepare(name string) (*pgx.PreparedStatement, error) {
 
 // Query runs the sql indentified by name. Return a row set.
 func (db *DB) Query(name string, args ...interface{}) (*pgx.Rows, error) {
-	sql, err := db.getQuery(name)
+	sql, err := db.qm.getQuery(name)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +70,7 @@ func (db *DB) Query(name string, args ...interface{}) (*pgx.Rows, error) {
 // Not that an error is only returned if the query is not defined.
 // A query error is defered untill row.Scan is run. See pgx docs for more info.
 func (db *DB) QueryRow(name string, args ...interface{}) (*pgx.Row, error) {
-	sql, err := db.getQuery(name)
+	sql, err := db.qm.getQuery(name)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +79,7 @@ func (db *DB) QueryRow(name string, args ...interface{}) (*pgx.Row, error) {
 
 // Exec runs the sql identified by name. Returns the result of the exec or an error.
 func (db *DB) Exec(name string, args ...interface{}) (pgx.CommandTag, error) {
-	sql, err := db.getQuery(name)
+	sql, err := db.qm.getQuery(name)
 	if err != nil {
 		return "", err
 	}

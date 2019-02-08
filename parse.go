@@ -2,6 +2,7 @@ package dotpgx
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -20,6 +21,15 @@ func merge(maps ...queryMap) (qm queryMap) {
 		for k, v := range m {
 			qm[k] = v
 		}
+	}
+	return
+}
+
+func (qm queryMap) getQuery(name string) (sql string, err error) {
+	sql = qm[name]
+	if sql == "" {
+		s := []string{"Unknown query", name}
+		err = errors.New(strings.Join(s, ": "))
 	}
 	return
 }

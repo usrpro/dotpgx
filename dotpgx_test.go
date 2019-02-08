@@ -1,8 +1,7 @@
-// +build all integration
-
 package dotpgx
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -26,49 +25,75 @@ type peer struct {
 }
 
 var peers = []peer{
-	{"Mickey Mouse", "mickey@disney.com"},
-	{"Donald Duck", "donald@disney.com"},
 	{"Foo Bar", "foo@bar.com"},
 	{"Double Trouble", "foo@bar.com"},
+	{"Lonely Ranger", "bar@foo.com"},
+	{"Mickey Mouse", "mickey@disney.com"},
+	{"Donald Duck", "donald@disney.com"},
 }
 
 func clean() {
-	defer db.Close()
 	if _, err := db.Exec("drop-peers-table"); err != nil {
-		panic(err)
+		fmt.Println("Unable to drop peers table", err)
 	}
-	// Check if we can safely close multiple times
-	db.Close()
 	db.Close()
 }
+
+func comparePeer(a peer, b peer) bool {
+	return a.name == b.name && a.email == b.email
+}
+
+func comparePeers(exp []peer, got []peer) []interface{} {
+	msg := []interface{}{ //ouch
+		"Peers slice not same;\nExpected:\n",
+		exp,
+		"\nGot:\n",
+		got,
+	}
+	if len(exp) == len(got) {
+		for k, e := range exp {
+			if !comparePeer(e, got[k]) {
+				return msg
+			}
+		}
+	} else {
+		return msg
+	}
+	return nil
+}
 func TestMain(m *testing.M) {
-	var err error
-	db, err = New(conf)
-	if err != nil {
-		panic(err)
+	f := func() int {
+		var err error
+		db, err = New(conf)
+		if err != nil {
+			panic(err)
+		}
+		err = db.ParsePath("glob_test")
+		if err != nil {
+			panic(err)
+		}
+		if db.qm["drop-peers-table"] == "" {
+			panic("Cleanup query not loaded, aborting")
+		}
+		defer clean()
+		if _, err := db.Exec("create-peers-table"); err != nil {
+			panic(err)
+		}
+		for _, p := range peers[:3] {
+			if _, err := db.Exec("create-peer", p.name, p.email); err != nil {
+				panic(err)
+			}
+		}
+		return m.Run()
 	}
-	err = db.ParsePath("glob_test")
-	if err != nil {
-		panic(err)
-	}
-	if db.qm["drop-peers-table"] == "" {
-		panic("Cleanup query not loaded, aborting")
-	}
-	e := m.Run()
-	clean()
-	os.Exit(e)
+	os.Exit(f())
 }
 
 func TestExec(t *testing.T) {
-	if _, err := db.Exec("create-peers-table"); err != nil {
-		t.Error("Error creating peers table", err)
+	p := peers[2]
+	if _, err := db.Exec("create-peer", p.name, p.email); err != nil {
+		t.Error("Error inserting peer;", p, err)
 		return
-	}
-	for _, u := range peers {
-		if _, err := db.Exec("create-peer", u.name, u.email); err != nil {
-			t.Error("Error inserting peer;", u, err)
-			return
-		}
 	}
 }
 
@@ -78,24 +103,42 @@ func TestQuery(t *testing.T) {
 		t.Error("Error in query execution", err)
 		return
 	}
-	var name, email string
+	var got []peer
 	for rows.Next() {
+		var name, email string
 		if err = rows.Scan(&name, &email); err != nil {
 			t.Error("Error in row scan", err)
 			return
 		}
+		p := peer{
+			name:  name,
+			email: email,
+		}
+		got = append(got, p)
+	}
+	exp := peers[:2]
+	if msg := comparePeers(exp, got); msg != nil {
+		t.Error(msg...)
 	}
 }
 
 func TestQueryRow(t *testing.T) {
-	row, err := db.QueryRow("find-one-peer-by-email", "mickey@disney.com")
+	row, err := db.QueryRow("find-one-peer-by-email", "bar@foo.com")
 	if err != nil {
 		t.Error("Error in query execution", err)
 		return
 	}
-	var name, email string
-	if err = row.Scan(&name, &email); err != nil {
+	var got peer
+	if err = row.Scan(&got.name, &got.email); err != nil {
 		t.Error("Error in row scan", err)
 		return
+	}
+	if !comparePeer(peers[2], got) {
+		t.Error(
+			"Peers not same\nExpected:\n",
+			peers[2],
+			"\nGot:\n",
+			got,
+		)
 	}
 }
