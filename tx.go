@@ -32,6 +32,15 @@ func (tx *Tx) Commit() error {
 	return tx.Ptx.Commit()
 }
 
+// Prepare a sql statement identified by name.
+func (tx *Tx) Prepare(name string) (*pgx.PreparedStatement, error) {
+	sql, err := tx.qm.getQuery(name)
+	if err != nil {
+		return nil, err
+	}
+	return tx.Ptx.Prepare(name, sql)
+}
+
 // Query runs the sql indentified by name. Return a row set.
 func (tx *Tx) Query(name string, args ...interface{}) (*pgx.Rows, error) {
 	sql, err := tx.qm.getQuery(name)
