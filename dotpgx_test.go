@@ -43,6 +43,17 @@ func comparePeer(a peer, b peer) bool {
 	return a.name == b.name && a.email == b.email
 }
 
+func rowScan(rows *pgx.Rows) (peers []peer, err error) {
+	for rows.Next() {
+		var p peer
+		if err = rows.Scan(&p.name, &p.email); err != nil {
+			return
+		}
+		peers = append(peers, p)
+	}
+	return
+}
+
 func comparePeers(exp []peer, got []peer) []interface{} {
 	msg := []interface{}{ //ouch
 		"Peers slice not same;\nExpected:\n",
@@ -90,7 +101,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestExec(t *testing.T) {
-	p := peers[2]
+	p := peers[3]
 	if _, err := db.Exec("create-peer", p.name, p.email); err != nil {
 		t.Error("Error inserting peer;", p, err)
 		return
@@ -103,18 +114,9 @@ func TestQuery(t *testing.T) {
 		t.Error("Error in query execution", err)
 		return
 	}
-	var got []peer
-	for rows.Next() {
-		var name, email string
-		if err = rows.Scan(&name, &email); err != nil {
-			t.Error("Error in row scan", err)
-			return
-		}
-		p := peer{
-			name:  name,
-			email: email,
-		}
-		got = append(got, p)
+	got, err := rowScan(rows)
+	if err != nil {
+		t.Error("rowScan error;", err)
 	}
 	exp := peers[:2]
 	if msg := comparePeers(exp, got); msg != nil {
