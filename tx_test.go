@@ -16,22 +16,6 @@ func TestTxBeginRollback(t *testing.T) {
 		return
 	}
 }
-func TestTxExecCommit(t *testing.T) {
-	tx, err := db.Begin()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer tx.Rollback()
-	p := peers[4]
-	if _, err := tx.Exec("create-peer", p.name, p.email); err != nil {
-		t.Error("Error inserting peer;", p, err)
-		return
-	}
-	if err = tx.Commit(); err != nil {
-		t.Error("Error on commit", p, err)
-	}
-}
 
 func TestTxQuery(t *testing.T) {
 	tx, err := db.Begin()
@@ -79,5 +63,22 @@ func TestTxQueryRow(t *testing.T) {
 			"\nGot:\n",
 			got,
 		)
+	}
+}
+
+func TestTxExecCommit(t *testing.T) {
+	tx, err := db.Begin()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer tx.Rollback()
+	p := peers[4]
+	if _, err := tx.Exec("create-peer", p.name, p.email); err != nil {
+		t.Error("Error inserting peer;", p, err)
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		t.Error("Error on commit", p, err)
 	}
 }

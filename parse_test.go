@@ -45,6 +45,28 @@ func TestMerge(t *testing.T) {
 	}
 }
 
+func TestGetQuery(t *testing.T) {
+	db := new(DB)
+	err := db.ParseFiles("parse_test.sql")
+	if err != nil {
+		t.Error("ParseFile err;", err)
+		return
+	}
+	sql, err := db.qm.getQuery("two")
+	if err != nil {
+		t.Error("qm.getQuery error;", err)
+		return
+	}
+	exp := "select 2;"
+	if sql != exp {
+		t.Error("\nExpected:\n", exp, "\nGot:\n", sql)
+	}
+	sql, err = db.qm.getQuery("none")
+	if err == nil || len(sql) != 0 {
+		t.Error("Expected an error and empty sql;\n", "Got:", sql)
+	}
+}
+
 var parse_expect queryMap = queryMap{
 	"one":    "select 1 from users where $1 = me;",
 	"two":    "select 2;",
@@ -54,7 +76,7 @@ var parse_expect queryMap = queryMap{
 }
 
 // Tests ParseSql and ParseFile at once
-func TestParseFile(t *testing.T) {
+func TestParseFiles(t *testing.T) {
 	db := new(DB)
 	err := db.ParseFiles("parse_test.sql")
 	if err != nil {

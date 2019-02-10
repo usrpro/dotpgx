@@ -100,12 +100,36 @@ func TestMain(m *testing.M) {
 	os.Exit(f())
 }
 
-func TestExec(t *testing.T) {
-	p := peers[3]
-	if _, err := db.Exec("create-peer", p.name, p.email); err != nil {
-		t.Error("Error inserting peer;", p, err)
+func TestNewClearClose(t *testing.T) {
+	bc := pgx.ConnPoolConfig{
+		ConnConfig: pgx.ConnConfig{
+			Host:     "nohost",
+			User:     "postgres",
+			Database: "dotpgx_test",
+		},
+		MaxConnections: 5,
+	}
+	if cp, err := New(bc); cp != nil || err == nil {
+		t.Error("No error generated in new")
 		return
 	}
+	// Create new connection in the local scope, so we can close it whithout affecting other tests.
+	cp, err := New(conf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = cp.ParsePath("glob_test")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	cp.ClearSql()
+	if cp.qm != nil {
+		t.Error("Failed to claer the query map:", cp.qm)
+		return
+	}
+	cp.Close()
 }
 
 func TestQuery(t *testing.T) {
@@ -142,5 +166,13 @@ func TestQueryRow(t *testing.T) {
 			"\nGot:\n",
 			got,
 		)
+	}
+}
+
+func TestExec(t *testing.T) {
+	p := peers[3]
+	if _, err := db.Exec("create-peer", p.name, p.email); err != nil {
+		t.Error("Error inserting peer;", p, err)
+		return
 	}
 }

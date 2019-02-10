@@ -8,10 +8,10 @@ go:
   - tip
 
 install:
-  - go get -t -tags integration ./...
+  - go get -t ./...
 
 before_script: 
   - psql -c 'create database dotpgx_test;' -U postgres
 
 script:
-  - go test -tags integration
+  - go test
