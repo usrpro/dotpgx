@@ -34,38 +34,42 @@ func (tx *Tx) Commit() error {
 
 // Prepare a sql statement identified by name.
 func (tx *Tx) Prepare(name string) (*pgx.PreparedStatement, error) {
-	sql, err := tx.qm.getQuery(name)
+	q, err := tx.qm.getQuery(name)
 	if err != nil {
 		return nil, err
 	}
-	return tx.Ptx.Prepare(name, sql)
+	q.ps, err = tx.Ptx.Prepare(name, q.getSql())
+	if err != nil {
+		return nil, err
+	}
+	return q.ps, nil
 }
 
 // Query runs the sql indentified by name. Return a row set.
 func (tx *Tx) Query(name string, args ...interface{}) (*pgx.Rows, error) {
-	sql, err := tx.qm.getQuery(name)
+	q, err := tx.qm.getQuery(name)
 	if err != nil {
 		return nil, err
 	}
-	return tx.Ptx.Query(sql, args...)
+	return tx.Ptx.Query(q.getSql(), args...)
 }
 
 // QueryRow runs the sql identified by name. It returns a single row.
 // Not that an error is only returned if the query is not defined.
 // A query error is defered untill row.Scan is run. See pgx docs for more info.
 func (tx *Tx) QueryRow(name string, args ...interface{}) (*pgx.Row, error) {
-	sql, err := tx.qm.getQuery(name)
+	q, err := tx.qm.getQuery(name)
 	if err != nil {
 		return nil, err
 	}
-	return tx.Ptx.QueryRow(sql, args...), nil
+	return tx.Ptx.QueryRow(q.getSql(), args...), nil
 }
 
 // Exec runs the sql identified by name. Returns the result of the exec or an error.
 func (tx *Tx) Exec(name string, args ...interface{}) (pgx.CommandTag, error) {
-	sql, err := tx.qm.getQuery(name)
+	q, err := tx.qm.getQuery(name)
 	if err != nil {
 		return "", err
 	}
-	return tx.Ptx.Exec(sql, args...)
+	return tx.Ptx.Exec(q.getSql(), args...)
 }

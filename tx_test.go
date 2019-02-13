@@ -4,12 +4,21 @@ import (
 	"testing"
 )
 
+var tx *Tx
+
+func cleanTx() {
+	tx.Rollback()
+	tx = nil
+}
+
 func TestTxBeginRollback(t *testing.T) {
-	tx, err := db.Begin()
+	var err error
+	tx, err = db.Begin()
 	if err != nil {
 		t.Error("Error in transaction begin", err)
 		return
 	}
+	defer cleanTx()
 	err = tx.Rollback()
 	if err != nil {
 		t.Error("Error in transaction rollback", err)
@@ -18,12 +27,15 @@ func TestTxBeginRollback(t *testing.T) {
 }
 
 func TestTxQuery(t *testing.T) {
-	tx, err := db.Begin()
-	if err != nil {
-		t.Error(err)
-		return
+	var err error
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer cleanTx()
 	}
-	defer tx.Rollback()
 	rows, err := tx.Query("find-peers-by-email", "foo@bar.com")
 	if err != nil {
 		t.Error("Error in query execution", err)
@@ -40,12 +52,15 @@ func TestTxQuery(t *testing.T) {
 }
 
 func TestTxQueryRow(t *testing.T) {
-	tx, err := db.Begin()
-	if err != nil {
-		t.Error(err)
-		return
+	var err error
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer cleanTx()
 	}
-	defer tx.Rollback()
 	row, err := tx.QueryRow("find-one-peer-by-email", "bar@foo.com")
 	if err != nil {
 		t.Error("Error in query execution", err)
@@ -67,12 +82,15 @@ func TestTxQueryRow(t *testing.T) {
 }
 
 func TestTxExecCommit(t *testing.T) {
-	tx, err := db.Begin()
-	if err != nil {
-		t.Error(err)
-		return
+	var err error
+	if tx == nil {
+		tx, err = db.Begin()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		defer cleanTx()
 	}
-	defer tx.Rollback()
 	p := peers[4]
 	if _, err := tx.Exec("create-peer", p.name, p.email); err != nil {
 		t.Error("Error inserting peer;", p, err)
@@ -80,5 +98,30 @@ func TestTxExecCommit(t *testing.T) {
 	}
 	if err = tx.Commit(); err != nil {
 		t.Error("Error on commit", p, err)
+	}
+}
+
+func TestTxPrepare(t *testing.T) {
+	var err error
+	tx, err = db.Begin()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer cleanTx()
+	name := "find-peers-by-email"
+	if _, err := tx.Prepare(name); err != nil {
+		t.Fatal("Error in prepare statement", err)
+	}
+	// Check if the query are indeed prepared
+	if !db.qm[name].isPrepared() {
+		t.Fatal("Query not prepared:", name)
+	}
+
+	t.Run("Prepared TX query", TestTxQuery)
+	// Re-parse to test auto-clear
+	err = db.ParsePath("glob_test")
+	if err != nil {
+		t.Fatal(err)
 	}
 }

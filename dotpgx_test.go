@@ -3,6 +3,7 @@ package dotpgx
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/jackc/pgx"
@@ -83,7 +84,8 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			panic(err)
 		}
-		if db.qm["drop-peers-table"] == "" {
+		fmt.Println(db.qm)
+		if db.qm["drop-peers-table"] == nil {
 			panic("Cleanup query not loaded, aborting")
 		}
 		defer clean()
@@ -124,7 +126,7 @@ func TestNewClearClose(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	cp.ClearSql()
+	cp.ClearMap()
 	if cp.qm != nil {
 		t.Error("Failed to claer the query map:", cp.qm)
 		return
@@ -174,5 +176,45 @@ func TestExec(t *testing.T) {
 	if _, err := db.Exec("create-peer", p.name, p.email); err != nil {
 		t.Error("Error inserting peer;", p, err)
 		return
+	}
+}
+
+func TestPrepare(t *testing.T) {
+	if _, err := db.Prepare("find-peers-by-email"); err != nil {
+		t.Fatal("Error in prepare statement", err)
+	}
+	// Test the error in PrepareAll
+	m := []string{
+		"Error in preparing statement:",
+		"spanac",
+		"; With query:",
+		"spanac $?;",
+	}
+	exp := strings.Join(m, " ")
+	r := strings.NewReader("--name: spanac\nspanac $?;")
+	if err := db.ParseSql(r); err != nil {
+		t.Fatal(err)
+	}
+	_, err := db.PrepareAll()
+	if err == nil || fmt.Sprint(err) != exp {
+		t.Fatal("Incorrect error condition from PrepareAll\nExpected:\n", exp, "\nGot:\n", err)
+	}
+	if err := db.DropQuery("spanac"); err != nil {
+		t.Fatal(err)
+	}
+	// Check if all the queries are indeed prepared
+	for name, query := range db.qm {
+		if !query.isPrepared() {
+			t.Fatal("Query not prepared:", name)
+		}
+	}
+
+	t.Run("Prepared query", TestQuery)
+	t.Run("Prepared query row", TestQueryRow)
+	t.Run("Prepared exec", TestExec)
+	// Re-parse to test auto-clear
+	err = db.ParsePath("glob_test")
+	if err != nil {
+		t.Fatal(err)
 	}
 }

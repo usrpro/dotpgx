@@ -8,9 +8,27 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jackc/pgx"
 )
 
-type queryMap map[string]string
+type query struct {
+	sql string
+	ps  *pgx.PreparedStatement
+}
+
+func (q *query) isPrepared() bool {
+	return q != nil && q.ps != nil
+}
+
+func (q *query) getSql() string {
+	if q.isPrepared() {
+		return q.ps.Name
+	}
+	return q.sql
+}
+
+type queryMap map[string]*query
 
 // Merge one or more queryMaps into the current.
 // Any tags that are declared multiple times get overwritten
@@ -25,13 +43,12 @@ func merge(maps ...queryMap) (qm queryMap) {
 	return
 }
 
-func (qm queryMap) getQuery(name string) (sql string, err error) {
-	sql = qm[name]
-	if sql == "" {
+func (qm queryMap) getQuery(name string) (*query, error) {
+	if qm[name] == nil {
 		s := []string{"Unknown query", name}
-		err = errors.New(strings.Join(s, ": "))
+		return nil, errors.New(strings.Join(s, ": "))
 	}
-	return
+	return qm[name], nil
 }
 
 // ParseSql parses and stores SQL queries from a io.Reader.
@@ -60,7 +77,10 @@ func (db *DB) ParseSql(r io.Reader) error {
 		if strings.HasPrefix(line, "-- name:") || strings.HasPrefix(line, "--name:") {
 			tag = strings.TrimSpace(strings.Split(line, ":")[1])
 			// Initialise to empty query body, overwites any previous query with the same name
-			qm[tag] = ""
+			if err := db.DropQuery(tag); err != nil {
+				return err
+			}
+			qm[tag] = &query{}
 			continue
 		}
 		// Skip empty and comment lines
@@ -84,17 +104,18 @@ func (db *DB) ParseSql(r io.Reader) error {
 			// Default to an auto-incremented tag number.
 			tag = fmt.Sprintf("%06d", db.qn)
 			db.qn++
+			qm[tag] = &query{}
 		}
 		// Inside of query body?
 		if len(tag) > 0 {
 			// Cut away inline comments
-			q := strings.TrimSpace(strings.Split(line, "--")[0])
-			if len(qm[tag]) == 0 {
-				qm[tag] = q
+			sql := strings.TrimSpace(strings.Split(line, "--")[0])
+			if len(qm[tag].sql) == 0 {
+				qm[tag].sql = sql
 			} else {
 				// Join with the existing body
-				j := []string{qm[tag], q}
-				qm[tag] = strings.Join(j, " ")
+				j := []string{qm[tag].sql, sql}
+				qm[tag].sql = strings.Join(j, " ")
 			}
 
 			// End of query body reached?
