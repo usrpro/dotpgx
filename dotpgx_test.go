@@ -112,24 +112,20 @@ func TestNewClearClose(t *testing.T) {
 		MaxConnections: 5,
 	}
 	if cp, err := New(bc); cp != nil || err == nil {
-		t.Error("No error generated in new")
-		return
+		t.Fatal("No error generated in new")
 	}
 	// Create new connection in the local scope, so we can close it whithout affecting other tests.
 	cp, err := New(conf)
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
 	err = cp.ParsePath("glob_test")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatal(err)
 	}
 	cp.ClearMap()
 	if cp.qm != nil {
-		t.Error("Failed to claer the query map:", cp.qm)
-		return
+		t.Fatal("Failed to clear the query map:", cp.qm)
 	}
 	cp.Close()
 }
@@ -137,32 +133,29 @@ func TestNewClearClose(t *testing.T) {
 func TestQuery(t *testing.T) {
 	rows, err := db.Query("find-peers-by-email", "foo@bar.com")
 	if err != nil {
-		t.Error("Error in query execution", err)
-		return
+		t.Fatal("Error in query execution", err)
 	}
 	got, err := rowScan(rows)
 	if err != nil {
-		t.Error("rowScan error;", err)
+		t.Fatal("rowScan error;", err)
 	}
 	exp := peers[:2]
 	if msg := comparePeers(exp, got); msg != nil {
-		t.Error(msg...)
+		t.Fatal(msg...)
 	}
 }
 
 func TestQueryRow(t *testing.T) {
 	row, err := db.QueryRow("find-one-peer-by-email", "bar@foo.com")
 	if err != nil {
-		t.Error("Error in query execution", err)
-		return
+		t.Fatal("Error in query execution", err)
 	}
 	var got peer
 	if err = row.Scan(&got.name, &got.email); err != nil {
-		t.Error("Error in row scan", err)
-		return
+		t.Fatal("Error in row scan", err)
 	}
 	if !comparePeer(peers[2], got) {
-		t.Error(
+		t.Fatal(
 			"Peers not same\nExpected:\n",
 			peers[2],
 			"\nGot:\n",
@@ -174,8 +167,7 @@ func TestQueryRow(t *testing.T) {
 func TestExec(t *testing.T) {
 	p := peers[3]
 	if _, err := db.Exec("create-peer", p.name, p.email); err != nil {
-		t.Error("Error inserting peer;", p, err)
-		return
+		t.Fatal("Error inserting peer;", p, err)
 	}
 }
 

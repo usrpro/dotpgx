@@ -41,7 +41,7 @@ func TestMerge(t *testing.T) {
 	}
 	qm = merge(qm, qm2)
 	if msg := compareQm(merge_expect, qm); msg != nil {
-		t.Error(msg...)
+		t.Fatal(msg...)
 	}
 }
 
@@ -50,21 +50,19 @@ func TestGetQuery(t *testing.T) {
 	db.qm = make(queryMap)
 	err := db.ParseFiles("parse_test.sql")
 	if err != nil {
-		t.Error("ParseFile err;", err)
-		return
+		t.Fatal("ParseFile err;", err)
 	}
 	q, err := db.qm.getQuery("two")
 	if err != nil {
-		t.Error("qm.getQuery error;", err)
-		return
+		t.Fatal("qm.getQuery error;", err)
 	}
 	exp := "select 2;"
 	if q.sql != exp {
-		t.Error("\nExpected:\n", exp, "\nGot:\n", q.sql)
+		t.Fatal("\nExpected:\n", exp, "\nGot:\n", q.sql)
 	}
 	q, err = db.qm.getQuery("none")
 	if err == nil || q != nil {
-		t.Error("Expected an error and empty sql;\n", "Got:", q.sql)
+		t.Fatal("Expected an error and empty sql;\n", "Got:", q.sql)
 	}
 }
 
@@ -82,11 +80,10 @@ func TestParseFiles(t *testing.T) {
 	db.qm = make(queryMap)
 	err := db.ParseFiles("parse_test.sql")
 	if err != nil {
-		t.Error("ParseFile err;", err)
-		return
+		t.Fatal("ParseFile err;", err)
 	}
 	if msg := compareQm(parse_expect, db.qm); msg != nil {
-		t.Error(msg...)
+		t.Fatal(msg...)
 	}
 }
 
@@ -97,11 +94,10 @@ func TestParsePath(t *testing.T) {
 	db.qm = make(queryMap)
 	err := db.ParsePath("glob_test")
 	if err != nil {
-		t.Error("ParseFileGlob err;", err)
-		return
+		t.Fatal("ParseFileGlob err;", err)
 	}
 	exp, got := 5, len(db.qm)
 	if exp != got {
-		t.Error("Expected", exp, "queries in the map; Got", got)
+		t.Fatal("Expected", exp, "queries in the map; Got", got)
 	}
 }
