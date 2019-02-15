@@ -7,7 +7,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"sync"
 
 	"github.com/jackc/pgx"
 )
@@ -50,6 +52,16 @@ func (qm queryMap) getQuery(name string) (*query, error) {
 	}
 	return qm[name], nil
 }
+
+func (qm queryMap) sort() (index []string) {
+	for k, _ := range qm {
+		index = append(index, k)
+	}
+	sort.Strings(index)
+	return
+}
+
+var mutex = &sync.Mutex{}
 
 // ParseSql parses and stores SQL queries from a io.Reader.
 // Queries should end with a semi-colon.
@@ -125,7 +137,9 @@ func (db *DB) ParseSql(r io.Reader) error {
 			continue
 		}
 	}
+	mutex.Lock()
 	db.qm = merge(db.qm, qm)
+	mutex.Unlock()
 	return nil
 }
 

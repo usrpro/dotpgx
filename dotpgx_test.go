@@ -123,10 +123,20 @@ func TestNewClearClose(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cp.ClearMap()
-	if cp.qm != nil {
-		t.Fatal("Failed to clear the query map:", cp.qm)
+	err = cp.ClearMap()
+	if err != nil {
+		t.Fatal(err)
 	}
+	if len(cp.qm) > 0 && cp.qn != 0 {
+		t.Fatal("Failed to clear the query map:", cp.qm, cp.qn)
+	}
+	// See of we can parse again
+	err = cp.ParsePath("glob_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Test multiple close
+	cp.Close()
 	cp.Close()
 }
 

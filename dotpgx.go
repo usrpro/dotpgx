@@ -3,6 +3,7 @@ package dotpgx
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/jackc/pgx"
@@ -16,20 +17,6 @@ type DB struct {
 	Pool *pgx.ConnPool
 	qm   queryMap
 	qn   int // Incremented value for unamed queries
-}
-
-// DropQuery removes a query form the Map.
-// It calls Pgx Deallocate if the query was a prepared statement.
-// An error is returned only when deallocating fails.
-func (db *DB) DropQuery(name string) (err error) {
-	if db.qm[name].isPrepared() {
-		err = db.Pool.Deallocate(name)
-		if err != nil {
-			return
-		}
-	}
-	delete(db.qm, name)
-	return
 }
 
 /*
@@ -136,16 +123,43 @@ func (db *DB) Exec(name string, args ...interface{}) (pgx.CommandTag, error) {
 	return db.Pool.Exec(q.getSql(), args...)
 }
 
+// DropQuery removes a query form the Map.
+// It calls Pgx Deallocate if the query was a prepared statement.
+// An error is returned only when deallocating fails.
+// Regardless of an error, the query will be dropped from the map.
+func (db *DB) DropQuery(name string) (err error) {
+	if db.qm[name].isPrepared() {
+		err = db.Pool.Deallocate(name)
+	}
+	mutex.Lock()
+	delete(db.qm, name)
+	mutex.Unlock()
+	return
+}
+
 // ClearMap clears the query map and sets the internal incremental counter to 0.
 // Use this before you want to load a fresh set of queries, keeping the connection pool open.
-func (db *DB) ClearMap() {
-	db.qm = nil
+// An error is only returned if one or more prepared statements failed to deallocate.
+// It does not abbort on error and continues to (attempt) the clear the remaining queries.
+func (db *DB) ClearMap() (err error) {
+	var msg []string
+	for name, _ := range db.qm {
+		err := db.DropQuery(name)
+		if err != nil {
+			msg = append(msg, fmt.Sprint(err))
+		}
+	}
 	db.qn = 0
+	if len(msg) > 0 {
+		err = errors.New(strings.Join(msg, "\n"))
+	}
+	return
 }
 
 // Close cleans up the mapped queries and closes the pgx connection pool.
 // It is safe to call close multiple times.
 func (db *DB) Close() {
+	// Possible Deaollocate errors ignored, we are going to close the connnection anyway.
 	db.ClearMap()
 	db.Pool.Close()
 }
