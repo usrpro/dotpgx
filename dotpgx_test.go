@@ -9,6 +9,8 @@ import (
 	"github.com/jackc/pgx"
 )
 
+const queriesDir = "tests/queries"
+
 var conf = pgx.ConnPoolConfig{
 	ConnConfig: pgx.ConnConfig{
 		Host:     "/run/postgresql",
@@ -73,6 +75,7 @@ func comparePeers(exp []peer, got []peer) []interface{} {
 	}
 	return nil
 }
+
 func TestMain(m *testing.M) {
 	f := func() int {
 		var err error
@@ -80,7 +83,7 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			panic(err)
 		}
-		err = db.ParsePath("glob_test")
+		err = db.ParsePath(queriesDir)
 		if err != nil {
 			panic(err)
 		}
@@ -119,7 +122,7 @@ func TestNewClearClose(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = cp.ParsePath("glob_test")
+	err = cp.ParsePath(queriesDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +134,7 @@ func TestNewClearClose(t *testing.T) {
 		t.Fatal("Failed to clear the query map:", cp.qm, cp.qn)
 	}
 	// See of we can parse again
-	err = cp.ParsePath("glob_test")
+	err = cp.ParsePath(queriesDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +218,7 @@ func TestPrepare(t *testing.T) {
 	t.Run("Prepared query row", TestQueryRow)
 	t.Run("Prepared exec", TestExec)
 	// Re-parse to test auto-clear
-	err = db.ParsePath("glob_test")
+	err = db.ParsePath(queriesDir)
 	if err != nil {
 		t.Fatal(err)
 	}

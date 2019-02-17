@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+const parseFile = "tests/parse.sql"
+
 func compareQm(exp queryMap, got queryMap) []interface{} {
 	msg := []interface{}{
 		"Maps not same;\nExpected:\n",
@@ -48,7 +50,7 @@ func TestMerge(t *testing.T) {
 func TestGetQuery(t *testing.T) {
 	db := new(DB)
 	db.qm = make(queryMap)
-	err := db.ParseFiles("parse_test.sql")
+	err := db.ParseFiles(parseFile)
 	if err != nil {
 		t.Fatal("ParseFile err;", err)
 	}
@@ -78,7 +80,7 @@ var parse_expect queryMap = queryMap{
 func TestParseFiles(t *testing.T) {
 	db := new(DB)
 	db.qm = make(queryMap)
-	err := db.ParseFiles("parse_test.sql")
+	err := db.ParseFiles(parseFile)
 	if err != nil {
 		t.Fatal("ParseFile err;", err)
 	}
@@ -92,7 +94,7 @@ func TestParseFiles(t *testing.T) {
 func TestParsePath(t *testing.T) {
 	db := new(DB)
 	db.qm = make(queryMap)
-	err := db.ParsePath("glob_test")
+	err := db.ParsePath(queriesDir)
 	if err != nil {
 		t.Fatal("ParseFileGlob err;", err)
 	}
