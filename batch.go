@@ -10,15 +10,16 @@ import (
 // Batch represents a pgx btach and the loaded query map.
 // Support is still primitive and limited for our own use in migrations.
 type Batch struct {
-	batch *pgx.Batch
-	qm    queryMap
+	// Pgx provides direct access to the pgx batch object
+	Pgx *pgx.Batch
+	qm  queryMap
 }
 
 // BeginBatch starts a new pgx batch.
 func (db *DB) BeginBatch() *Batch {
 	return &Batch{
-		batch: db.Pool.BeginBatch(),
-		qm:    db.qm,
+		Pgx: db.Pool.BeginBatch(),
+		qm:  db.qm,
 	}
 }
 
@@ -28,7 +29,7 @@ func (b *Batch) Queue(name string, arguments []interface{}, parameterOIDs []pgty
 	if err != nil {
 		return
 	}
-	b.batch.Queue(q.getSql(), arguments, parameterOIDs, resultFormatCodes)
+	b.Pgx.Queue(q.getSql(), arguments, parameterOIDs, resultFormatCodes)
 	return
 }
 
@@ -44,25 +45,25 @@ func (b *Batch) QueueAll() {
 
 // Close the batch operation
 func (b *Batch) Close() error {
-	return b.batch.Close()
+	return b.Pgx.Close()
 }
 
 // Send the batch
 func (b *Batch) Send() error {
-	return b.batch.Send(context.TODO(), nil)
+	return b.Pgx.Send(context.TODO(), nil)
 }
 
 //  ExecResults reads the results from the next query in the batch as if the query has been sent with Exec.
 func (b *Batch) ExecResults() (pgx.CommandTag, error) {
-	return b.batch.ExecResults()
+	return b.Pgx.ExecResults()
 }
 
 // QueryResults reads the results from the next query in the batch as if the query has been sent with Query.
 func (b *Batch) QueryResults() (*pgx.Rows, error) {
-	return b.batch.QueryResults()
+	return b.Pgx.QueryResults()
 }
 
 // QueryRowResults reads the results from the next query in the batch as if the query has been sent with QueryRow.
 func (b *Batch) QueryRowResults() *pgx.Row {
-	return b.batch.QueryRowResults()
+	return b.Pgx.QueryRowResults()
 }
