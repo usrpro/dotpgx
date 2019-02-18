@@ -23,6 +23,14 @@ func (db *DB) BeginBatch() *Batch {
 	}
 }
 
+// BeginBatch starts a new pgx batch inside the current transaction
+func (tx *Tx) BeginBatch() *Batch {
+	return &Batch{
+		Pgx: tx.Ptx.BeginBatch(),
+		qm:  tx.qm,
+	}
+}
+
 // Queue a query by name
 func (b *Batch) Queue(name string, arguments []interface{}, parameterOIDs []pgtype.OID, resultFormatCodes []int16) (err error) {
 	q, err := b.qm.getQuery(name)

@@ -12,16 +12,7 @@ var exp = []string{
 	"Eggs",
 }
 
-func TestBatch(t *testing.T) {
-	db, err := New(conf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
-	if err := db.ParseFiles("tests/batch.sql"); err != nil {
-		t.Fatal(err)
-	}
-	b := db.BeginBatch()
+func testBatch(b *Batch, t *testing.T) {
 	b.QueueAll()
 	if err := b.Send(); err != nil {
 		t.Fatal(err)
@@ -61,4 +52,25 @@ func TestBatch(t *testing.T) {
 	if err := b.Close(); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestBatch(t *testing.T) {
+	db, err := New(conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if err := db.ParseFiles("tests/batch.sql"); err != nil {
+		t.Fatal(err)
+	}
+	// Plain batch
+	b := db.BeginBatch()
+	testBatch(b, t)
+	// Batch inside transaction
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	b = tx.BeginBatch()
+	testBatch(b, t)
 }

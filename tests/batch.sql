@@ -17,3 +17,5 @@ insert into batchme (content) values ('Eggs');
 select content from batchme;
 
 select content from batchme where content = 'Spanac' limit 1;
+
+drop table batchme;
