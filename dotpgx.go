@@ -56,6 +56,17 @@ func New(conf pgx.ConnPoolConfig) (db *DB, err error) {
 	return
 }
 
+// HasQueries returns true if the are queries in the map.
+// False in case of nil map or 0 queries.
+func (db *DB) HasQueries() bool {
+	return db.qm != nil && len(db.qm) > 0
+}
+
+// List of all registered query names, sorted
+func (db *DB) List() (index []string) {
+	return db.qm.sort()
+}
+
 // Prepare a sql statement identified by name.
 func (db *DB) Prepare(name string) (*pgx.PreparedStatement, error) {
 	q, err := db.qm.getQuery(name)

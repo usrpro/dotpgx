@@ -3,6 +3,7 @@ package dotpgx
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -105,7 +106,11 @@ func TestMain(m *testing.M) {
 	os.Exit(f())
 }
 
-func TestNewClearClose(t *testing.T) {
+func TestHaveList(t *testing.T) {
+
+}
+
+func TestNewHasListClearClose(t *testing.T) {
 	bc := pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
 			Host:     "nohost",
@@ -122,9 +127,21 @@ func TestNewClearClose(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = cp.ParsePath(queriesDir)
+	err = cp.ParseFiles("tests/list.sql")
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !cp.HasQueries() {
+		t.Fatal("HasQueries returned false")
+	}
+	exp := []string{
+		"000000",
+		"000001",
+		"000002",
+	}
+	got := cp.List()
+	if !reflect.DeepEqual(exp, got) {
+		t.Fatal("Lists not equal\nExpected:\n", exp, "\nGot:\n", got)
 	}
 	err = cp.ClearMap()
 	if err != nil {
