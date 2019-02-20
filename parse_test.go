@@ -1,6 +1,7 @@
 package dotpgx
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -68,6 +69,23 @@ func TestGetQuery(t *testing.T) {
 	}
 }
 
+func TestParseSqlErr(t *testing.T) {
+	db := new(DB)
+	db.qm = make(queryMap)
+	err := db.ParseSql(strings.NewReader(""))
+	if err == nil {
+		t.Fatal("Expected a parse error")
+	}
+	err = db.ParseSql(
+		strings.NewReader(`
+			-- Nothing to parse here
+		`),
+	)
+	if err == nil {
+		t.Fatal("Expected a parse error")
+	}
+}
+
 var parse_expect queryMap = queryMap{
 	"one":    &query{sql: "select 1 from users where $1 = me;"},
 	"two":    &query{sql: "select 2;"},
@@ -86,6 +104,14 @@ func TestParseFiles(t *testing.T) {
 	}
 	if msg := compareQm(parse_expect, db.qm); msg != nil {
 		t.Fatal(msg...)
+	}
+	err = db.ParseFiles()
+	if err == nil {
+		t.Fatal("Expected error for empty file list")
+	}
+	err = db.ParseFiles("nope")
+	if err == nil {
+		t.Fatal("Expected error for non-existing file")
 	}
 }
 

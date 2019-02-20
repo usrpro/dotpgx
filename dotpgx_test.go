@@ -106,10 +106,6 @@ func TestMain(m *testing.M) {
 	os.Exit(f())
 }
 
-func TestHaveList(t *testing.T) {
-
-}
-
 func TestNewHasListClearClose(t *testing.T) {
 	bc := pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{

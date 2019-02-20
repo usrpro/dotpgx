@@ -137,6 +137,9 @@ func (db *DB) ParseSql(r io.Reader) error {
 			continue
 		}
 	}
+	if len(qm) == 0 {
+		return errors.New("Nothing parsed")
+	}
 	mutex.Lock()
 	db.qm = merge(db.qm, qm)
 	mutex.Unlock()
@@ -145,8 +148,11 @@ func (db *DB) ParseSql(r io.Reader) error {
 
 // ParseFiles opens one or more files and feeds them to ParseSql
 func (db *DB) ParseFiles(files ...string) error {
-	for _, f := range files {
-		f, err := os.Open(f)
+	if len(files) == 0 {
+		return errors.New("No files to parse")
+	}
+	for _, v := range files {
+		f, err := os.Open(v)
 		if err != nil {
 			return err
 		}

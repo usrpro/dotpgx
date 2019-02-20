@@ -110,7 +110,7 @@ func TestTxPrepare(t *testing.T) {
 
 	t.Run("Prepared TX query", TestTxQuery)
 	// Re-parse to test auto-clear
-	err = db.ParsePath("glob_test")
+	err = db.ParsePath("tests/queries")
 	if err != nil {
 		t.Fatal(err)
 	}
