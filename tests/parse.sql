@@ -26,3 +26,11 @@ select 4
 
 -- name: five
 select 5
+
+-- name: func
+create or replace function tester()
+    returns integer
+    language 'sql'
+    as $$
+        select 1;
+    $$;

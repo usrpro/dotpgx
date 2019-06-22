@@ -71,11 +71,15 @@ var mutex = &sync.Mutex{}
 // Parsed queries get appended to the current map.
 // If a name tag was already present, it will get overwritten by the new one parsed.
 // The serial value is stored inside the DB object,
-// so it is safe to call this function multiple times
+// so it is safe to call this function multiple times.
+//
+// If the input conains a double dollar sign "$$", the parser will ignore semi-colon
+// untill another occurance of "$$". This makes parsing of functions possible.
 func (db *DB) ParseSQL(r io.Reader) error {
 	sc := bufio.NewScanner(r)
 	comment := false
 	var tag string
+	var function bool
 	qm := make(queryMap)
 	for sc.Scan() {
 		// Read the line
@@ -130,8 +134,17 @@ func (db *DB) ParseSQL(r io.Reader) error {
 				qm[tag].sql = strings.Join(j, " ")
 			}
 
-			// End of query body reached?
-			if strings.HasSuffix(line, ";") {
+			// End of function body?
+			if strings.Contains(sql, "$$") && function {
+				function = false
+			}
+			// Start of function body?
+			if strings.Contains(sql, "$$") && !function {
+				function = true
+			}
+
+			// End of query body reached? (not in function body)
+			if strings.HasSuffix(line, ";") && !function {
 				tag = ""
 			}
 			continue

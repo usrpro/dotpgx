@@ -92,6 +92,7 @@ var parseExpect = queryMap{
 	"000000": &query{sql: "select 3;"},
 	"000001": &query{sql: "select 4"},
 	"five":   &query{sql: "select 5"},
+	"func":   &query{sql: "create or replace function tester() returns integer language 'sql' as $$ select 1; $$;"},
 }
 
 // Tests ParseSql and ParseFile at once
