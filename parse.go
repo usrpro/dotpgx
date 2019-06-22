@@ -23,7 +23,7 @@ func (q *query) isPrepared() bool {
 	return q != nil && q.ps != nil
 }
 
-func (q *query) getSql() string {
+func (q *query) getSQL() string {
 	if q.isPrepared() {
 		return q.ps.Name
 	}
@@ -54,7 +54,7 @@ func (qm queryMap) getQuery(name string) (*query, error) {
 }
 
 func (qm queryMap) sort() (index []string) {
-	for k, _ := range qm {
+	for k := range qm {
 		index = append(index, k)
 	}
 	sort.Strings(index)
@@ -63,7 +63,7 @@ func (qm queryMap) sort() (index []string) {
 
 var mutex = &sync.Mutex{}
 
-// ParseSql parses and stores SQL queries from a io.Reader.
+// ParseSQL parses and stores SQL queries from a io.Reader.
 // Queries should end with a semi-colon.
 // It stores queries by their "--name: <name>" tag.
 // If no name tag is specified, an incremental number will be appointed.
@@ -72,7 +72,7 @@ var mutex = &sync.Mutex{}
 // If a name tag was already present, it will get overwritten by the new one parsed.
 // The serial value is stored inside the DB object,
 // so it is safe to call this function multiple times
-func (db *DB) ParseSql(r io.Reader) error {
+func (db *DB) ParseSQL(r io.Reader) error {
 	sc := bufio.NewScanner(r)
 	comment := false
 	var tag string
@@ -156,7 +156,7 @@ func (db *DB) ParseFiles(files ...string) error {
 		if err != nil {
 			return err
 		}
-		err = db.ParseSql(f)
+		err = db.ParseSQL(f)
 		f.Close()
 		if err != nil {
 			return err

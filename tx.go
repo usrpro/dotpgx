@@ -4,6 +4,7 @@ import (
 	"github.com/jackc/pgx"
 )
 
+// Tx is transaction
 type Tx struct {
 	Ptx *pgx.Tx
 	qm  queryMap
@@ -38,7 +39,7 @@ func (tx *Tx) Prepare(name string) (*pgx.PreparedStatement, error) {
 	if err != nil {
 		return nil, err
 	}
-	q.ps, err = tx.Ptx.Prepare(name, q.getSql())
+	q.ps, err = tx.Ptx.Prepare(name, q.getSQL())
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func (tx *Tx) Query(name string, args ...interface{}) (*pgx.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	return tx.Ptx.Query(q.getSql(), args...)
+	return tx.Ptx.Query(q.getSQL(), args...)
 }
 
 // QueryRow runs the sql identified by name. It returns a single row.
@@ -62,7 +63,7 @@ func (tx *Tx) QueryRow(name string, args ...interface{}) (*pgx.Row, error) {
 	if err != nil {
 		return nil, err
 	}
-	return tx.Ptx.QueryRow(q.getSql(), args...), nil
+	return tx.Ptx.QueryRow(q.getSQL(), args...), nil
 }
 
 // Exec runs the sql identified by name. Returns the result of the exec or an error.
@@ -71,5 +72,5 @@ func (tx *Tx) Exec(name string, args ...interface{}) (pgx.CommandTag, error) {
 	if err != nil {
 		return "", err
 	}
-	return tx.Ptx.Exec(q.getSql(), args...)
+	return tx.Ptx.Exec(q.getSQL(), args...)
 }

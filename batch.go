@@ -37,7 +37,7 @@ func (b *Batch) Queue(name string, arguments []interface{}, parameterOIDs []pgty
 	if err != nil {
 		return
 	}
-	b.Pgx.Queue(q.getSql(), arguments, parameterOIDs, resultFormatCodes)
+	b.Pgx.Queue(q.getSQL(), arguments, parameterOIDs, resultFormatCodes)
 	return
 }
 
@@ -61,7 +61,7 @@ func (b *Batch) Send() error {
 	return b.Pgx.Send(context.TODO(), nil)
 }
 
-//  ExecResults reads the results from the next query in the batch as if the query has been sent with Exec.
+// ExecResults reads the results from the next query in the batch as if the query has been sent with Exec.
 func (b *Batch) ExecResults() (pgx.CommandTag, error) {
 	return b.Pgx.ExecResults()
 }

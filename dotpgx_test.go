@@ -210,7 +210,7 @@ func TestPrepare(t *testing.T) {
 	}
 	exp := strings.Join(m, " ")
 	r := strings.NewReader("--name: spanac\nspanac $?;")
-	if err := db.ParseSql(r); err != nil {
+	if err := db.ParseSQL(r); err != nil {
 		t.Fatal(err)
 	}
 	_, err := db.PrepareAll()

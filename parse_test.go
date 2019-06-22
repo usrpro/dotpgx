@@ -27,7 +27,7 @@ func compareQm(exp queryMap, got queryMap) []interface{} {
 	return nil
 }
 
-var merge_expect queryMap = queryMap{
+var mergeExpect = queryMap{
 	"one":   &query{sql: "select 1;"},
 	"two":   &query{sql: "select 2"},
 	"three": &query{sql: "select 3"},
@@ -43,7 +43,7 @@ func TestMerge(t *testing.T) {
 		"three": &query{sql: "select 3"},
 	}
 	qm = merge(qm, qm2)
-	if msg := compareQm(merge_expect, qm); msg != nil {
+	if msg := compareQm(mergeExpect, qm); msg != nil {
 		t.Fatal(msg...)
 	}
 }
@@ -72,11 +72,11 @@ func TestGetQuery(t *testing.T) {
 func TestParseSqlErr(t *testing.T) {
 	db := new(DB)
 	db.qm = make(queryMap)
-	err := db.ParseSql(strings.NewReader(""))
+	err := db.ParseSQL(strings.NewReader(""))
 	if err == nil {
 		t.Fatal("Expected a parse error")
 	}
-	err = db.ParseSql(
+	err = db.ParseSQL(
 		strings.NewReader(`
 			-- Nothing to parse here
 		`),
@@ -86,7 +86,7 @@ func TestParseSqlErr(t *testing.T) {
 	}
 }
 
-var parse_expect queryMap = queryMap{
+var parseExpect = queryMap{
 	"one":    &query{sql: "select 1 from users where $1 = me;"},
 	"two":    &query{sql: "select 2;"},
 	"000000": &query{sql: "select 3;"},
@@ -102,7 +102,7 @@ func TestParseFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal("ParseFile err;", err)
 	}
-	if msg := compareQm(parse_expect, db.qm); msg != nil {
+	if msg := compareQm(parseExpect, db.qm); msg != nil {
 		t.Fatal(msg...)
 	}
 	err = db.ParseFiles()

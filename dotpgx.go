@@ -111,7 +111,7 @@ func (db *DB) Query(name string, args ...interface{}) (*pgx.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	return db.Pool.Query(q.getSql(), args...)
+	return db.Pool.Query(q.getSQL(), args...)
 }
 
 // QueryRow runs the sql identified by name. It returns a single row.
@@ -122,7 +122,7 @@ func (db *DB) QueryRow(name string, args ...interface{}) (*pgx.Row, error) {
 	if err != nil {
 		return nil, err
 	}
-	return db.Pool.QueryRow(q.getSql(), args...), nil
+	return db.Pool.QueryRow(q.getSQL(), args...), nil
 }
 
 // Exec runs the sql identified by name. Returns the result of the exec or an error.
@@ -131,7 +131,7 @@ func (db *DB) Exec(name string, args ...interface{}) (pgx.CommandTag, error) {
 	if err != nil {
 		return "", err
 	}
-	return db.Pool.Exec(q.getSql(), args...)
+	return db.Pool.Exec(q.getSQL(), args...)
 }
 
 // DropQuery removes a query form the Map.
@@ -154,7 +154,7 @@ func (db *DB) DropQuery(name string) (err error) {
 // It does not abbort on error and continues to (attempt) the clear the remaining queries.
 func (db *DB) ClearMap() (err error) {
 	var msg []string
-	for name, _ := range db.qm {
+	for name := range db.qm {
 		err := db.DropQuery(name)
 		if err != nil {
 			msg = append(msg, fmt.Sprint(err))
