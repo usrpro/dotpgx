@@ -87,12 +87,13 @@ func TestParseSqlErr(t *testing.T) {
 }
 
 var parseExpect = queryMap{
-	"one":    &query{sql: "select 1 from users where $1 = me;"},
-	"two":    &query{sql: "select 2;"},
-	"000000": &query{sql: "select 3;"},
-	"000001": &query{sql: "select 4"},
-	"five":   &query{sql: "select 5"},
-	"func":   &query{sql: "create or replace function tester() returns integer language 'sql' as $$ select 1; $$;"},
+	"one":          &query{sql: "select 1 from users where $1 = me;"},
+	"two":          &query{sql: "select 2;"},
+	"000000":       &query{sql: "select 3;"},
+	"000001":       &query{sql: "select 4"},
+	"five":         &query{sql: "select 5"},
+	"func":         &query{sql: "create or replace function tester() returns integer language 'sql' as $$ select 1; $$;"},
+	"another_func": &query{sql: "create or replace function another() returns integer language 'sql' as $$ select 2; $$;"},
 }
 
 // Tests ParseSql and ParseFile at once
