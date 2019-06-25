@@ -134,13 +134,16 @@ func (db *DB) ParseSQL(r io.Reader) error {
 				qm[tag].sql = strings.Join(j, " ")
 			}
 
-			// End of function body?
-			if strings.Contains(sql, "$$") && function {
-				function = false
-			}
-			// Start of function body?
-			if strings.Contains(sql, "$$") && !function {
-				function = true
+			if function {
+				// End of function body?
+				if strings.Contains(sql, "$$") {
+					function = false
+				}
+			} else {
+				// Start of function body?
+				if strings.Contains(sql, "$$") {
+					function = true
+				}
 			}
 
 			// End of query body reached? (not in function body)

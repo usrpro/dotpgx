@@ -35,7 +35,6 @@ create or replace function tester()
         select 1;
     $$;
 
---name: another_func
 create or replace function another()
     returns integer
     language 'sql'
