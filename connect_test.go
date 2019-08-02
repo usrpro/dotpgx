@@ -57,7 +57,7 @@ func TestConnPoolConfig(t *testing.T) {
 	}
 }
 
-func TestInitDBErrors(t *testing.T) {
+func TestInitDB(t *testing.T) {
 	exp := "no such host"
 	_, err := InitDB(testConfig, "")
 	if err == nil || !strings.HasSuffix(err.Error(), exp) {
@@ -65,8 +65,12 @@ func TestInitDBErrors(t *testing.T) {
 	}
 
 	exp = "No files to parse"
-	_, err = InitDB(Default, "")
+	_, err = InitDB(Default, "_")
 	if err == nil || err.Error() != exp {
 		t.Error("Expected error", exp, "Got:", err)
+	}
+
+	if _, err = InitDB(Default, ""); err != nil {
+		t.Error(err)
 	}
 }

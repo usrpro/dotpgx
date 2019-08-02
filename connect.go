@@ -67,6 +67,9 @@ func InitDB(c Config, path string) (db *DB, err error) {
 	if db, err = New(c.connPoolConfig()); err != nil {
 		return
 	}
+	if path == "" {
+		return
+	}
 	if err = db.ParsePath(path); err != nil {
 		return
 	}
