@@ -12,15 +12,6 @@ import (
 
 const queriesDir = "tests/queries"
 
-var conf = pgx.ConnPoolConfig{
-	ConnConfig: pgx.ConnConfig{
-		Host:     "/run/postgresql",
-		User:     "postgres",
-		Database: "dotpgx_test",
-	},
-	MaxConnections: 5,
-}
-
 var db *DB
 
 type peer struct {
@@ -80,11 +71,7 @@ func comparePeers(exp []peer, got []peer) []interface{} {
 func TestMain(m *testing.M) {
 	f := func() int {
 		var err error
-		db, err = New(conf)
-		if err != nil {
-			panic(err)
-		}
-		err = db.ParsePath(queriesDir)
+		db, err = InitDB(Default, queriesDir)
 		if err != nil {
 			panic(err)
 		}
@@ -107,19 +94,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewHasListClearClose(t *testing.T) {
-	bc := pgx.ConnPoolConfig{
-		ConnConfig: pgx.ConnConfig{
-			Host:     "nohost",
-			User:     "postgres",
-			Database: "dotpgx_test",
-		},
-		MaxConnections: 5,
-	}
-	if cp, err := New(bc); cp != nil || err == nil {
+	if cp, err := New(testConfig.connPoolConfig()); cp != nil || err == nil {
 		t.Fatal("No error generated in new")
 	}
 	// Create new connection in the local scope, so we can close it whithout affecting other tests.
-	cp, err := New(conf)
+	cp, err := New(Default.connPoolConfig())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -55,7 +55,7 @@ func testBatch(b *Batch, t *testing.T) {
 }
 
 func TestBatch(t *testing.T) {
-	db, err := New(conf)
+	db, err := New(Default.connPoolConfig())
 	if err != nil {
 		t.Fatal(err)
 	}
