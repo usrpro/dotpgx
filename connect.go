@@ -35,7 +35,8 @@ var Default = Config{
 	},
 }
 
-func (c Config) connPoolConfig() pgx.ConnPoolConfig {
+// ConnPoolConfig parses the Config into a pgx.ConnPoolConfig
+func (c Config) ConnPoolConfig() pgx.ConnPoolConfig {
 	cpc := pgx.ConnPoolConfig{
 		MaxConnections: c.MaxConnections,
 		ConnConfig: pgx.ConnConfig{
@@ -64,7 +65,7 @@ func (c Config) connPoolConfig() pgx.ConnPoolConfig {
 // Config is the dotpgx config, which will be parsed into a pgx.ConnPoolConfig.
 // Path is where sql queries will be parsed from.
 func InitDB(c Config, path string) (db *DB, err error) {
-	if db, err = New(c.connPoolConfig()); err != nil {
+	if db, err = New(c.ConnPoolConfig()); err != nil {
 		return
 	}
 	if path == "" {

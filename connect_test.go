@@ -32,13 +32,13 @@ func TestConnPoolConfig(t *testing.T) {
 			RuntimeParams: nil,
 		},
 	}
-	got := c.connPoolConfig()
+	got := c.ConnPoolConfig()
 	if !reflect.DeepEqual(got, exp) {
 		t.Error("\nExpected:\n", exp, "\nGot:\n", got)
 	}
 
 	c.TLS = true
-	got = c.connPoolConfig()
+	got = c.ConnPoolConfig()
 	if got.TLSConfig == nil {
 		t.Fatal("TLSConfig nil")
 	}
@@ -47,7 +47,7 @@ func TestConnPoolConfig(t *testing.T) {
 	}
 
 	c.RunTime.AppName = "appname"
-	got = c.connPoolConfig()
+	got = c.ConnPoolConfig()
 	a, ok := got.RuntimeParams["application_name"]
 	if !ok {
 		t.Fatal("Application name not set")

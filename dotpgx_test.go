@@ -94,11 +94,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewHasListClearClose(t *testing.T) {
-	if cp, err := New(testConfig.connPoolConfig()); cp != nil || err == nil {
+	if cp, err := New(testConfig.ConnPoolConfig()); cp != nil || err == nil {
 		t.Fatal("No error generated in new")
 	}
 	// Create new connection in the local scope, so we can close it whithout affecting other tests.
-	cp, err := New(Default.connPoolConfig())
+	cp, err := New(Default.ConnPoolConfig())
 	if err != nil {
 		t.Fatal(err)
 	}
